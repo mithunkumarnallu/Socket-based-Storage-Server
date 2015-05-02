@@ -10,12 +10,15 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  *
  * @author ashwinbahulkar
  */
 public class SocketBasedStorageServer {
+    
+    public HashMap<String,FileTableEntry> fileMap=new HashMap<String,FileTableEntry>();
 
     public static void main(String[] args) {
         new SocketBasedStorageServer();
