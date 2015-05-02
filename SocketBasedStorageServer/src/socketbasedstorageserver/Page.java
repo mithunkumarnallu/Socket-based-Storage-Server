@@ -12,8 +12,9 @@ package socketbasedstorageserver;
 public class Page {
     
     int pageNo;
-    char[] pageContent;
+    byte[] pageContent;
     long timeStamp;
+    int bytesInPage;
     
     Page()
     {

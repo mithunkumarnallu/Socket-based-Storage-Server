@@ -108,7 +108,10 @@ public class ConnectionHandler extends Thread {
 
             // Continuously serve the client
             while (true) {
-                String command = inputFromClient.readUTF();
+                String command = inputFromClient.readLine();
+                
+                if(command!=null)
+                {
                 System.out.println("Rcvd: " + command);
                 int spaceIndex = command.indexOf(' ');
 
@@ -127,6 +130,7 @@ public class ConnectionHandler extends Thread {
                         listFiles(command);
                         break;
                 }
+            }
             }
         } catch (IOException ex) {
             //System.err.println( ex );

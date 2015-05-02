@@ -6,8 +6,10 @@
 package socketbasedstorageserver;
 
 import Interfaces.PageMethods;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -29,10 +31,16 @@ public class PageManager implements PageMethods{
     public synchronized  Page getNewPage(String fileName,int pageNo) {
        
         FileTableEntry entry=server.fileMap.get(fileName);
+        Page page;
         
         if(entry==null)
         {
-            return createNewPage(fileName, pageNo);
+            try {
+                page = createNewPage(fileName, pageNo);
+            } catch (IOException ex) {
+                page = null;
+                ex.printStackTrace();
+            }
         }
         else
         {
@@ -41,26 +49,34 @@ public class PageManager implements PageMethods{
                 
                 if(pageNo==pageEnt.pageNo)
                 {
-                    return pageEnt;
+                    page =  pageEnt;
+                    break;
                 }
             }
-            return createNewPage(fileName, pageNo);
+            try {
+                page =  createNewPage(fileName, pageNo);
+            } catch (IOException ex) {
+                page = null;
+                ex.printStackTrace();
+            }
             
             
         }
         
+        if(page!=null)
+      page.timeStamp = System.currentTimeMillis();
         
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      return page;
     }
     
-    public synchronized Page createNewPage(String fileName,int pageNo)
+    public synchronized Page createNewPage(String fileName,int pageNo) throws IOException
     {
         FileTableEntry fileTableEntry = server.fileMap.get(fileName);
         Page page = GetPageFromSecondaryStorage(fileName, pageNo);
         if(fileTableEntry!=null)
         {
             //File entry exists. You may be required to replace it's corresponding pages.
-            
+            fileTableEntry.timestamp = System.currentTimeMillis();
             //Do we need to replace a page!
             if(fileTableEntry.pageList.size()<4)
             {
@@ -97,9 +113,22 @@ public class PageManager implements PageMethods{
         return page;
     }
     
-    public Page GetPageFromSecondaryStorage(String fileName, int pageNo)
+    public Page GetPageFromSecondaryStorage(String fileName, int pageNo) throws FileNotFoundException, IOException
     {
-        return null;
+        Page page;
+        try (RandomAccessFile file = new RandomAccessFile(fileName, "rw")) {
+            long pageStartOffset = pageNo*1024;
+            file.seek(pageStartOffset);
+            page = new Page();
+            page.pageNo=pageNo;
+            int i;
+            //Read 1024 bytes from file
+            for(i=0;(i<1024)&&(pageStartOffset+i < file.length());i++)
+            {
+                page.pageContent[i] = file.readByte();
+            }   page.bytesInPage = i;
+        }
+        return page;
     }
     
     private Page GetOldestPage(FileTableEntry pageList)
