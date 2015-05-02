@@ -14,7 +14,6 @@ import socketbasedstorageserver.*;
 public interface PageMethods {
     
    Page getNewPage(String fileName,int pageNo);
-   void freePages(List<Page> pages);
    
     
 }

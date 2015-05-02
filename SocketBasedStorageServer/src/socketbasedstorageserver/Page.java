@@ -11,6 +11,14 @@ package socketbasedstorageserver;
  */
 public class Page {
     
+    int pageNo;
+    char[] pageContent;
+    long timeStamp;
+    
+    Page()
+    {
+        timeStamp = System.currentTimeMillis();
+    }
     
     
 }

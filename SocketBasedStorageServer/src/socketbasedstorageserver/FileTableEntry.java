@@ -5,6 +5,7 @@
  */
 package socketbasedstorageserver;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,15 +14,16 @@ import java.util.List;
  */
 public class FileTableEntry {
 
-    public FileTableEntry(String filename, List<Page> pageList) {
+    public FileTableEntry(String filename) {
         this.filename = filename;
-        this.pageList = pageList;
+        this.pageList = new ArrayList<>();
+        timestamp = System.currentTimeMillis();
     }
     
     
     public String filename;
     public List<Page> pageList;
-    
+    public long timestamp;
     
     public synchronized void runCommand(String command)
     {
