@@ -116,7 +116,7 @@ public class PageManager implements PageMethods{
     public Page GetPageFromSecondaryStorage(String fileName, int pageNo) throws FileNotFoundException, IOException
     {
         Page page;
-        try (RandomAccessFile file = new RandomAccessFile(fileName, "rw")) {
+        try (RandomAccessFile file = new RandomAccessFile(".store//" + fileName, "rw")) {
             long pageStartOffset = pageNo*1024;
             file.seek(pageStartOffset);
             page = new Page();
