@@ -30,48 +30,47 @@ public class PageManager implements PageMethods{
     @Override
     public synchronized  Page getNewPage(String fileName,int pageNo) {
        
-        FileTableEntry entry=server.fileMap.get(fileName);
-        Page page;
+        FileTableEntry entry=server.getFileTableEntry(fileName);
+        Page page = null;
         
-        if(entry==null)
-        {
-            try {
-                page = createNewPage(fileName, pageNo);
-            } catch (IOException ex) {
-                page = null;
-                ex.printStackTrace();
-            }
-        }
-        else
+//        if(entry==null)
+//        {
+//            try {
+//                page = createNewPage(fileName, pageNo);
+//            } catch (IOException ex) {
+//                page = null;
+//                ex.printStackTrace();
+//            }
+//        }
+        //else
         {
             for(Page pageEnt:entry.pageList)
             {
-                
                 if(pageNo==pageEnt.pageNo)
                 {
                     page =  pageEnt;
                     break;
                 }
             }
-            try {
-                page =  createNewPage(fileName, pageNo);
-            } catch (IOException ex) {
-                page = null;
-                ex.printStackTrace();
+            if(page == null) {
+                try {
+                    page =  createNewPage(fileName, pageNo);
+                } catch (IOException ex) {
+                    page = null;
+                    ex.printStackTrace();
+                }    
             }
-            
-            
         }
         
         if(page!=null)
-      page.timeStamp = System.currentTimeMillis();
+            page.timeStamp = System.currentTimeMillis();
         
       return page;
     }
     
     public synchronized Page createNewPage(String fileName,int pageNo) throws IOException
     {
-        FileTableEntry fileTableEntry = server.fileMap.get(fileName);
+        FileTableEntry fileTableEntry = server.getFileTableEntry(fileName);
         Page page = GetPageFromSecondaryStorage(fileName, pageNo);
         if(fileTableEntry!=null)
         {
@@ -97,7 +96,7 @@ public class PageManager implements PageMethods{
             //You may be required to replace a corresponding file entry
             if(server.fileMap.size()<8)
             {
-                FileTableEntry newFileTableEntry = new FileTableEntry(fileName);
+                FileTableEntry newFileTableEntry = new FileTableEntry(fileName, this);
                 newFileTableEntry.pageList.add(page);
                 server.fileMap.put(fileName, newFileTableEntry);
             }
@@ -105,7 +104,7 @@ public class PageManager implements PageMethods{
             {
                 FileTableEntry oldestFile = GetOldestFile(server.fileMap);
                 server.fileMap.remove(oldestFile.filename);
-                FileTableEntry newFileTableEntry = new FileTableEntry(fileName);
+                FileTableEntry newFileTableEntry = new FileTableEntry(fileName, this);
                 newFileTableEntry.pageList.add(page);
                 server.fileMap.put(fileName, newFileTableEntry);
             }
@@ -146,7 +145,7 @@ public class PageManager implements PageMethods{
         
     }
     
-     private FileTableEntry GetOldestFile(HashMap<String,FileTableEntry> fileMap)
+    public FileTableEntry GetOldestFile(HashMap<String,FileTableEntry> fileMap)
     {
         FileTableEntry oldestFile;
         oldestFile=null;

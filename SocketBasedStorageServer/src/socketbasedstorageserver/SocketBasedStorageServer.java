@@ -19,7 +19,8 @@ import java.util.HashMap;
 public class SocketBasedStorageServer {
     
     public HashMap<String,FileTableEntry> fileMap=new HashMap<String,FileTableEntry>();
-
+    PageManager pageManager = new PageManager(this);
+    
     public static void main(String[] args) {
         new SocketBasedStorageServer();
     }
@@ -50,7 +51,7 @@ public class SocketBasedStorageServer {
                         + "'s IP Address is " + inetAddress.getHostAddress());
 
                 // Create a new thread for the connection
-                ConnectionHandler thread = new ConnectionHandler(socket);
+                ConnectionHandler thread = new ConnectionHandler(socket, this);
 
                 // Start the new thread
                 thread.start();
@@ -64,5 +65,27 @@ public class SocketBasedStorageServer {
 
         System.out.println("MultiThreadServer ended at " + new Date());
 
+    }
+    
+    public FileTableEntry getFileTableEntry(String fileName) {
+        
+        if(!fileMap.containsKey(fileName)) 
+        {
+            //You may be required to replace a corresponding file entry
+            if(fileMap.size()<8)
+            {
+                fileMap.put(fileName, new FileTableEntry(fileName, pageManager));
+            }
+            else
+            {
+                FileTableEntry oldestFile = pageManager.GetOldestFile(fileMap);
+                fileMap.remove(oldestFile.filename);
+                //To-Do: Print that frames were deallocated
+                FileTableEntry newFileTableEntry = new FileTableEntry(fileName, pageManager);
+                fileMap.put(fileName, newFileTableEntry);
+            }
+        }
+            fileMap.put(fileName, new FileTableEntry(fileName, pageManager));
+        return fileMap.get(fileName);
     }
 }
