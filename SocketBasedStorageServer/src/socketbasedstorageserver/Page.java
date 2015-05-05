@@ -15,9 +15,11 @@ public class Page {
     byte[] pageContent;
     long timeStamp;
     int bytesInPage;
+    int frameNo;
     
-    Page()
+    Page(int frameNo)
     {
+        this.frameNo=frameNo;
         timeStamp = System.currentTimeMillis();
     }
     
