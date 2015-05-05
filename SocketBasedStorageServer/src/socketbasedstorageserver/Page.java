@@ -21,6 +21,7 @@ public class Page {
     {
         this.frameNo=frameNo;
         timeStamp = System.currentTimeMillis();
+        this.pageContent = new byte[1024];
     }
     
     

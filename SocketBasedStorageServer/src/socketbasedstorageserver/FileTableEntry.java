@@ -5,6 +5,7 @@
  */
 package socketbasedstorageserver;
 
+import Interfaces.PageMethods;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -39,7 +40,11 @@ public class FileTableEntry {
     }
     
     private void printOutputToConsole(String response, long threadId) {
-        System.out.println("[thread " + threadId + "] " + response);
+        String[] messages = response.split("\n");
+        for(String msg: messages) {
+            if(!msg.equals(""))
+                System.out.println("[thread " + threadId + "] " + msg);
+        }
     }
     
     private void storeFile(String command, DataOutputStream output, long threadId) throws IOException {
@@ -83,7 +88,8 @@ public class FileTableEntry {
         } catch (Exception ex) {
             response = "ERROR: " + ex.getMessage();
         }
-
+        
+        response = pageManager.freePages(filename) + "\n" + response;
         sendMessageToClient(response, output);
         printOutputToConsole(response, threadId);
     }
@@ -107,11 +113,11 @@ public class FileTableEntry {
                 int pageNo = (int)(byteOffset / 1024) + 1;
                 int bytesSent = 0;
                 boolean isFirstPageSent = false;
-                Page page = null;
+                PageMessage pageMessage = null;
                 
                 while(length > 0) {
 
-                    page = pageManager.getNewPage(fileName, pageNo);
+                    pageMessage = pageManager.getNewPage(fileName, pageNo);
                     if(isFirstPageSent == false && 1024 * pageNo - byteOffset <= length) {
                         bytesSent = (int)(1024 * pageNo - byteOffset);
                         isFirstPageSent = true;
@@ -126,7 +132,7 @@ public class FileTableEntry {
                     
                     //To - Do: Get required page contents from page
                     sendMessageToClient("ACK " + bytesSent + "\n", output);
-                    printOutputToConsole("Transferred " + bytesSent + " bytes from offset " + byteOffset, threadId);
+                    printOutputToConsole(pageMessage.message + "\nTransferred " + bytesSent + " bytes from offset " + (byteOffset - bytesSent), threadId);
                 }
             }
         } catch (Exception ex) {

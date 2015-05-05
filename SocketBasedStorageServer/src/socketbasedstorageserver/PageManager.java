@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -21,195 +22,164 @@ public class PageManager {
 
     int usedPageCnt;
     public SocketBasedStorageServer server;
-    
-    public HashMap<String,HashMap<Integer,Page>> usedpageMap=new HashMap<String,HashMap<Integer,Page>>();
-    public HashMap<Integer,Page> avlbpageMap=new HashMap<Integer, Page>();
-    public PageManager(SocketBasedStorageServer server) {
-        
-        for(int i=0;i<32;i++)
-        {
-            Page page=new Page(i);
-            avlbpageMap.put(i, page);
-            
-        }
-        this.server=server;
-        usedPageCnt=0;
-    }
-    
-    
 
-    
-    public synchronized  PageMessage getNewPage(String fileName,int pageNo) {
-       
-        FileTableEntry entry=server.getFileTableEntry(fileName);
-        Page page = null;
-        PageMessage pageMessage=null;
-        
-//        if(entry==null)
-//        {
-//            try {
-//                page = createNewPage(fileName, pageNo);
-//            } catch (IOException ex) {
-//                page = null;
-//                ex.printStackTrace();
-//            }
-//        }
-        //else
-        
-            for(Page pageEnt:entry.pageList)
-            {
-                if(pageNo==pageEnt.pageNo)
-                {
-                   
-                    page =  pageEnt;
-                    //page.timeStamp=System.currentTimeMillis();
-                     pageMessage=new PageMessage("", page);
-                    break;
-                }
-            }
-            if(page == null) {
-                try {
-                    pageMessage=  createNewPage(fileName, pageNo);
-                } catch (IOException ex) {
-                    page = null;
-                    ex.printStackTrace();
-                }    
-            }
-        
-        
-        if(page!=null)
-            page.timeStamp = System.currentTimeMillis();
-        
-      return pageMessage;
+    public HashMap<String, HashMap<Integer, Page>> usedpageMap = new HashMap<String, HashMap<Integer, Page>>();
+    public HashMap<Integer, Page> avlbpageMap = new HashMap<Integer, Page>();
+
+    public PageManager(SocketBasedStorageServer server) {
+
+        for (int i = 0; i < 32; i++) {
+            Page page = new Page(i);
+            avlbpageMap.put(i, page);
+        }
+        this.server = server;
+        usedPageCnt = 0;
     }
-    
-    public synchronized PageMessage createNewPage(String fileName,int pageNo) throws IOException
-    {
-        String msg="";
+
+    public synchronized PageMessage getNewPage(String fileName, int pageNo) {
+
+        FileTableEntry entry = server.getFileTableEntry(fileName);
+        Page page = null;
+        PageMessage pageMessage = null;
+
+        for (Page pageEnt : entry.pageList) {
+            if (pageNo == pageEnt.pageNo) {
+
+                page = pageEnt;
+                //page.timeStamp=System.currentTimeMillis();
+                pageMessage = new PageMessage("", page);
+                break;
+            }
+        }
+        if (page == null) {
+            try {
+                pageMessage = createNewPage(fileName, pageNo);
+            } catch (IOException ex) {
+                page = null;
+                ex.printStackTrace();
+            }
+        }
+
+        if (page != null) {
+            page.timeStamp = System.currentTimeMillis();
+        }
+
+        return pageMessage;
+    }
+
+    public synchronized PageMessage createNewPage(String fileName, int pageNo) throws IOException {
+        String msg = "";
         FileTableEntry fileTableEntry = server.getFileTableEntry(fileName);
         Page page;
-        PageMessage pageMsg=null;
-        if(fileTableEntry!=null)
-        {
+        PageMessage pageMsg = null;
+        if (fileTableEntry != null) {
             //File entry exists. You may be required to replace it's corresponding pages.
             fileTableEntry.timestamp = System.currentTimeMillis();
             //Do we need to replace a page!
-            
-            if(fileTableEntry.pageList.size()<4)
-            {
+
+            if (fileTableEntry.pageList.size() < 4) {
                 //It means theres more room.
-                 pageMsg=getAvlbPage();
-              page=pageMsg.page;
-              fileTableEntry.pageList.add(page);
-              msg+=pageMsg.message+"\nAllocated page"+pageNo+" to frame "+page.frameNo;
-            }
-            else
-            {
+                pageMsg = getAvlbPage();
+                page = pageMsg.page;
+                GetPageFromSecondaryStorage(fileName, pageNo, page);
+                fileTableEntry.pageList.add(page);
+                msg += pageMsg.message + "\nAllocated page" + pageNo + " to frame " + page.frameNo;
+                pageMsg.message = msg;
+            } else {
                 //You need to replace a page.
                 //Find LRU page.
                 int prevPgNo;
-              
-                Page LruPage = GetOldestPage(fileTableEntry);
-                prevPgNo=LruPage.pageNo;
-                page=GetPageFromSecondaryStorage(fileName, pageNo,LruPage);
-                LruPage.timeStamp=System.currentTimeMillis();
-                msg="Allocated page"+pageNo+" to frame "+LruPage.frameNo+" (replaced page "+prevPgNo+")";
-                pageMsg=new PageMessage(msg, page);
-// fileTableEntry.pageList.remove(LruPage);
-                
+
+                page = GetOldestPage(fileTableEntry);
+                prevPgNo = page.pageNo;
+                GetPageFromSecondaryStorage(fileName, pageNo, page);
+                page.timeStamp = System.currentTimeMillis();
+                msg = "Allocated page " + pageNo + " to frame " + page.frameNo + " (replaced page " + prevPgNo + ")";
+                pageMsg = new PageMessage(msg, page);
+                // fileTableEntry.pageList.remove(LruPage);
+
                 //fileTableEntry.pageList.add(page);
             }
         }
-       
-         
+
         return pageMsg;
     }
-    
-    public Page GetPageFromSecondaryStorage(String fileName, int pageNo,Page page) throws FileNotFoundException, IOException
-    {
-        
+
+    public Page GetPageFromSecondaryStorage(String fileName, int pageNo, Page page) throws FileNotFoundException, IOException {
+
         try (RandomAccessFile file = new RandomAccessFile(".store//" + fileName, "rw")) {
-            long pageStartOffset = pageNo*1024;
+            long pageStartOffset = pageNo * 1024;
             file.seek(pageStartOffset);
-            
-           
-            page.pageNo=pageNo;
+
+            page.pageNo = pageNo;
             int i;
             //Read 1024 bytes from file
-            for(i=0;(i<1024)&&(pageStartOffset+i < file.length());i++)
-            {
+            for (i = 0; (i < 1024) && (pageStartOffset + i < file.length()); i++) {
                 page.pageContent[i] = file.readByte();
-            }   page.bytesInPage = i;
+            }
+            page.bytesInPage = i;
         }
         return page;
     }
-    
-    private Page GetOldestPage(FileTableEntry pageList)
-    {
+
+    private Page GetOldestPage(FileTableEntry pageList) {
         Page oldestPage = pageList.pageList.get(0);
-        
-        for(Page page : pageList.pageList)
-        {
-            if(page.timeStamp<oldestPage.timeStamp)
-            {
+
+        for (Page page : pageList.pageList) {
+            if (page.timeStamp < oldestPage.timeStamp) {
                 oldestPage = page;
             }
         }
         return oldestPage;
-        
+
     }
-    
-    public FileTableEntry GetOldestFile(HashMap<String,FileTableEntry> fileMap)
-    {
+
+    public FileTableEntry GetOldestFile(HashMap<String, FileTableEntry> fileMap) {
         FileTableEntry oldestFile;
-        oldestFile=null;
-        
-        for(Entry<String,FileTableEntry> file : fileMap.entrySet())
-        {
-            if(oldestFile == null || file.getValue().timestamp<oldestFile.timestamp)
-            {
+        oldestFile = null;
+
+        for (Entry<String, FileTableEntry> file : fileMap.entrySet()) {
+            if (oldestFile == null || file.getValue().timestamp < oldestFile.timestamp) {
                 oldestFile = file.getValue();
             }
         }
         return oldestFile;
     }
-    
-    public String freePages(String filename)
-    {
-        String msg="";
-        FileTableEntry entry=server.fileMap.get(filename);
-        for(Page page:entry.pageList)
-        {
-            freePage(page);
-            
-            msg=msg+"Deallocated frame "+page.frameNo+"\n";
+
+    public String freePages(String filename) {
+        String msg = "";
+        FileTableEntry entry = server.fileMap.get(filename);
+        if(entry != null) {
+            for (Page page : entry.pageList) {
+                freePage(page);
+
+                msg = msg + "Deallocated frame " + page.frameNo + "\n";
+            }
+            server.fileMap.remove(filename);
         }
-        server.fileMap.remove(filename);
         return msg;
-        
     }
-    
-    public void freePage(Page page)
-    {
+
+    public void freePage(Page page) {
         usedPageCnt--;
         avlbpageMap.put(page.frameNo, page);
     }
-    
-    public PageMessage getAvlbPage()
-    {
-        String msg="";
-        if(usedPageCnt==32)
-        {
-            FileTableEntry entry=GetOldestFile(server.fileMap);
-            msg=freePages(entry.filename);
-            
+
+    public PageMessage getAvlbPage() {
+        String msg = "";
+        if (usedPageCnt == 32) {
+            FileTableEntry entry = GetOldestFile(server.fileMap);
+            msg = freePages(entry.filename);
+
         }
         usedPageCnt++;
         
-        return new PageMessage(msg, avlbpageMap.entrySet().iterator().next().getValue());
+        Map.Entry<Integer, Page> entry = avlbpageMap.entrySet().iterator().next();
+        avlbpageMap.remove(entry.getKey());
+        entry.getValue().timeStamp = System.currentTimeMillis();
         
-         
+        return new PageMessage(msg, entry.getValue());
     }
     //public synchronized int 
-    
+
 }
