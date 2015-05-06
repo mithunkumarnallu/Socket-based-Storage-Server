@@ -5,6 +5,10 @@
  */
 package socketbasedstorageserver;
 
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author ashwinbahulkar
@@ -13,6 +17,7 @@ public class Page {
     
     int pageNo;
     byte[] pageContent;
+    String contentsInString = "";
     long timeStamp;
     int bytesInPage;
     int frameNo;
@@ -24,5 +29,7 @@ public class Page {
         this.pageContent = new byte[1024];
     }
     
-    
+    String getContent(int startIndex, int length) {
+        return contentsInString.substring(startIndex, startIndex + length);
+    }
 }

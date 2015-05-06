@@ -117,6 +117,7 @@ public class PageManager {
             for (i = 0; (i < 1024) && (pageStartOffset + i < file.length()); i++) {
                 page.pageContent[i] = file.readByte();
             }
+            page.contentsInString = new String(page.pageContent);
             page.bytesInPage = i;
         }
         return page;

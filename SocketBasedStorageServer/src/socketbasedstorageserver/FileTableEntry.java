@@ -109,7 +109,12 @@ public class FileTableEntry {
                 response = "ERROR: File does not exist!";
                 sendMessageToClient(response, output);
                 printOutputToConsole(response, threadId);
-            } else {
+            } else if(length + byteOffset > file.length()) {
+                response = "ERROR: Invalid byte range!";
+                sendMessageToClient(response, output);
+                printOutputToConsole(response, threadId);
+            }
+            else {
                 int pageNo = (int)(byteOffset / 1024) + 1;
                 int bytesSent = 0;
                 boolean isFirstPageSent = false;
@@ -131,7 +136,7 @@ public class FileTableEntry {
                     length -= bytesSent;
                     
                     //To - Do: Get required page contents from page
-                    sendMessageToClient("ACK " + bytesSent + "\n", output);
+                    sendMessageToClient("ACK " + bytesSent + "\n" + pageMessage.page.getContent((int)(byteOffset - bytesSent) % 1024, bytesSent), output);
                     printOutputToConsole(pageMessage.message + "\nTransferred " + bytesSent + " bytes from offset " + (byteOffset - bytesSent), threadId);
                 }
             }
