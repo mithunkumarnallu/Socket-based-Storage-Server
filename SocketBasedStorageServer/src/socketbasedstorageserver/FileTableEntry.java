@@ -49,8 +49,17 @@ public class FileTableEntry {
     }
     
     private void storeFile(String command, DataOutputStream output, long threadId) throws IOException {
-        String commandInfo = command.substring(0, command.indexOf('\n'));
-        String fileContents = command.substring(command.indexOf('\n') + 1);
+        String commandInfo = "", fileContents = "";
+        
+        if(command.indexOf('\n') != -1) {
+            commandInfo = command.substring(0, command.indexOf('\n'));
+            fileContents = command.substring(command.indexOf('\n') + 1);
+        }
+        else {
+            commandInfo = command.substring(0, command.indexOf("\\n"));
+            fileContents = command.substring(command.indexOf("\\n") + 1);
+        }
+            
         String fileName = commandInfo.substring(commandInfo.indexOf(' ') + 1);
         fileName = fileName.substring(0, fileName.indexOf(' '));
         File file = new File(".store//" + fileName);
