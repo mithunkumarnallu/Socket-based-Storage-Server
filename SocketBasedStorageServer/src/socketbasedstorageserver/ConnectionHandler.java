@@ -23,10 +23,13 @@ public class ConnectionHandler extends Thread {
     private DataInputStream inputFromClient = null;
     private DataOutputStream outputToClient = null;
     private SocketBasedStorageServer server = null;
+    byte[] commandRaw;
+    String command;
     
     public ConnectionHandler(Socket socket, SocketBasedStorageServer server) {
         this.socket = socket;
         this.server = server;
+        commandRaw = new byte[1000];
     }
     
     private void sendMessageToClient(String message) throws IOException {
@@ -69,12 +72,19 @@ public class ConnectionHandler extends Thread {
 
             // Continuously serve the client
             while (true) {
-                String command = inputFromClient.readUTF();
+                command = Read();
+                
                 String fileName = "";
                 
                 if(command!=null)
                 {
                     command = command.trim();
+                    if(command.equals(""))
+                    {
+                        continue;
+                    }
+                    
+                    
                     System.out.println("Rcvd: " + command);
                     if(command.toUpperCase().startsWith("DIR"))
                         listFiles(command);
@@ -84,6 +94,12 @@ public class ConnectionHandler extends Thread {
                             fileName = command.substring(command.indexOf(' ') + 1);
                         else if(command.toUpperCase().startsWith("STORE")) {
                             //command = command + "\n" + inputFromClient.readLine();
+                            //Check if the file contents are there as well.
+                            if(!(command.contains("\\n") || command.contains("\n")))
+                            {
+                                command+="\n" + Read();
+                            }
+                            
                             fileName = command.substring(command.indexOf(' ') + 1, command.indexOf(' ', command.indexOf(' ') + 1));
                         }
                         else
@@ -98,5 +114,25 @@ public class ConnectionHandler extends Thread {
             //System.err.println( ex );
             printOutputToConsole("Client closed its socket... terminating",this.getId());
         }
+    }
+    
+    private String Read() throws IOException
+    {
+        String command="";
+        int bytesAvailableToRead=-1;
+        
+        bytesAvailableToRead = inputFromClient.available();
+        byte[] inputStreamBytes;
+        
+        while(bytesAvailableToRead==0)
+        {
+            bytesAvailableToRead = inputFromClient.available();
+        }
+        
+        inputStreamBytes = new byte[bytesAvailableToRead+1];
+            inputFromClient.read(inputStreamBytes);
+            command = new String(inputStreamBytes);
+        
+        return command;
     }
 }
