@@ -22,6 +22,7 @@ public class FileTableEntry {
     public List<Page> pageList;
     public long timestamp;
     private PageManager pageManager = null;
+    public boolean isOccupied=false;
     
     public FileTableEntry(String filename, PageManager pageManager) {
         this.filename = filename;
@@ -148,6 +149,7 @@ public class FileTableEntry {
     
     public synchronized boolean runCommand(String command, DataOutputStream output, long threadId)
     {
+        isOccupied=true;
         int spaceIndex = command.indexOf(' ');
                     
         String actualCommand = spaceIndex == -1 ? command : command.substring(0, command.indexOf(' '));
@@ -167,6 +169,7 @@ public class FileTableEntry {
                     readFile(command, output, threadId);
                     break;
             }
+            isOccupied=false;
             return true;
         }
         catch(IOException ex) {
