@@ -63,6 +63,7 @@ public class PageManager {
 
         if (page != null) {
             page.timeStamp = System.currentTimeMillis();
+            entry.timestamp = System.currentTimeMillis();
         }
 
         return pageMessage;
