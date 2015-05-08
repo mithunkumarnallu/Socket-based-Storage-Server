@@ -54,6 +54,7 @@ public class PageManager {
         if (page == null) {
             try {
                 pageMessage = createNewPage(fileName, pageNo);
+                page = pageMessage.page;
             } catch (IOException ex) {
                 page = null;
                 ex.printStackTrace();
@@ -83,7 +84,7 @@ public class PageManager {
                 page = pageMsg.page;
                 GetPageFromSecondaryStorage(fileName, pageNo, page);
                 fileTableEntry.pageList.add(page);
-                msg += pageMsg.message + "\nAllocated page" + pageNo + " to frame " + page.frameNo;
+                msg += pageMsg.message + "\nAllocated page " + pageNo + " to frame " + page.frameNo;
                 pageMsg.message = msg;
             } else {
                 //You need to replace a page.
@@ -93,7 +94,7 @@ public class PageManager {
                 page = GetOldestPage(fileTableEntry);
                 prevPgNo = page.pageNo;
                 GetPageFromSecondaryStorage(fileName, pageNo, page);
-                page.timeStamp = System.currentTimeMillis();
+                //page.timeStamp = System.currentTimeMillis();
                 msg = "Allocated page " + pageNo + " to frame " + page.frameNo + " (replaced page " + prevPgNo + ")";
                 pageMsg = new PageMessage(msg, page);
                 // fileTableEntry.pageList.remove(LruPage);
@@ -123,16 +124,9 @@ public class PageManager {
         return page;
     }
 
-    private Page GetOldestPage(FileTableEntry pageList) {
-        Page oldestPage = pageList.pageList.get(0);
-
-        for (Page page : pageList.pageList) {
-            if (page.timeStamp < oldestPage.timeStamp) {
-                oldestPage = page;
-            }
-        }
+    private Page GetOldestPage(FileTableEntry fileTableEntry) {
+        Page oldestPage = fileTableEntry.getOldestPage();
         return oldestPage;
-
     }
 
     public FileTableEntry GetOldestFile(HashMap<String, FileTableEntry> fileMap) {
@@ -181,7 +175,7 @@ public class PageManager {
         
         Map.Entry<Integer, Page> entry = avlbpageMap.entrySet().iterator().next();
         avlbpageMap.remove(entry.getKey());
-        entry.getValue().timeStamp = System.currentTimeMillis();
+        //entry.getValue().timeStamp = System.currentTimeMillis();
         
         return new PageMessage(msg, entry.getValue());
     }

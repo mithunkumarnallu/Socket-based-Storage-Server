@@ -23,6 +23,7 @@ public class FileTableEntry {
     public long timestamp;
     private PageManager pageManager = null;
     public boolean isOccupied=false;
+    int nextPageNo = 0;
     
     public FileTableEntry(String filename, PageManager pageManager) {
         this.filename = filename;
@@ -148,12 +149,18 @@ public class FileTableEntry {
                     //To - Do: Get required page contents from page
                     sendMessageToClient("ACK " + bytesSent + "\n" + pageMessage.page.getContent((int)(byteOffset - bytesSent) % 1024, bytesSent), output);
                     printOutputToConsole(pageMessage.message + "\nTransferred " + bytesSent + " bytes from offset " + (byteOffset - bytesSent), threadId);
+                    nextPageNo = (nextPageNo + 1) % 4;
                 }
             }
         } catch (Exception ex) {
             System.err.println(ex);
             throw ex;
         }
+    }
+    
+    public Page getOldestPage()
+    {
+        return this.pageList.get(nextPageNo);
     }
     
     public synchronized boolean runCommand(String command, DataOutputStream output, long threadId)
