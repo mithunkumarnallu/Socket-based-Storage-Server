@@ -156,6 +156,10 @@ public class PageManager {
 
                 msg = msg + "Deallocated frame " + page.frameNo + "\n";
             }
+            while(entry.isOccupied==true)
+            {
+                continue;
+            }
             server.fileMap.remove(filename);
         }
         return msg;
