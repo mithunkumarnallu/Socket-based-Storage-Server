@@ -142,7 +142,7 @@ public class PageManager {
         return oldestFile;
     }
 
-    public String freePages(String filename) {
+    public synchronized String  freePages(String filename) {
         String msg = "";
         FileTableEntry entry = server.fileMap.get(filename);
         if(entry != null) {
