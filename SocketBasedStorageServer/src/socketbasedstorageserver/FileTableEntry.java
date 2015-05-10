@@ -94,13 +94,15 @@ public class FileTableEntry {
                 file.delete();
                 response = "ACK\n";
             } else {
+                
                 response = "ERROR: No such File\n";
             }
         } catch (Exception ex) {
+            
             response = "ERROR: " + ex.getMessage();
         }
-        
         sendMessageToClient(response, output);
+        this.isOccupied=false;
         response = pageManager.freePages(filename) + "\n" + response;
         printOutputToConsole(response, threadId);
     }
