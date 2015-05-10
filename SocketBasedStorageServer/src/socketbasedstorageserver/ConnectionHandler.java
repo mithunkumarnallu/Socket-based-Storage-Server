@@ -5,13 +5,16 @@
  */
 package socketbasedstorageserver;
 
-import java.net.*;
 import java.io.*;
+import java.net.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import sun.security.x509.X500Name;
 
 /**
  *
@@ -21,6 +24,7 @@ public class ConnectionHandler extends Thread {
 
     private Socket socket; // A connected socket
     private DataInputStream inputFromClient = null;
+    private BufferedReader bufferedReader = null;
     private DataOutputStream outputToClient = null;
     private SocketBasedStorageServer server = null;
     byte[] commandRaw;
@@ -67,12 +71,25 @@ public class ConnectionHandler extends Thread {
             // Create data input and output streams
             inputFromClient
                     = new DataInputStream(socket.getInputStream());
+            bufferedReader = new BufferedReader(new InputStreamReader(inputFromClient));
             outputToClient
                     = new DataOutputStream(socket.getOutputStream());
-
+            
             // Continuously serve the client
+            List<Byte> inputBytes = new ArrayList<>();
+            StringBuilder sb ;
             while (true) {
-                command = Read();
+                int charFromClient;
+                sb = new StringBuilder();
+                
+                while(true)
+                {
+                    charFromClient=inputFromClient.read();
+                    if((char)(charFromClient) == '\n')
+                        break;
+                    sb.append((char)(charFromClient));
+                }
+                command = sb.toString();
                 
                 String fileName = "";
                 
@@ -95,9 +112,18 @@ public class ConnectionHandler extends Thread {
                         else if(command.toUpperCase().startsWith("STORE")) {
                             //command = command + "\n" + inputFromClient.readLine();
                             //Check if the file contents are there as well.
+                            
                             if(!(command.contains("\\n") || command.contains("\n")))
                             {
-                                command+="\n" + Read();
+                                int streamLength = Integer.parseInt(command.split(" ")[2]);
+                                int streamCounter = 0;
+                                sb = new StringBuilder();
+                                while( streamCounter < streamLength )
+                                {    
+                                    sb.append((char)(inputFromClient.read()));
+                                    streamCounter ++;
+                                }
+                                command+="\n" + sb.toString();
                             }
                             
                             fileName = command.substring(command.indexOf(' ') + 1, command.indexOf(' ', command.indexOf(' ') + 1));
@@ -120,18 +146,22 @@ public class ConnectionHandler extends Thread {
     {
         String command="";
         int bytesAvailableToRead=-1;
-        
-        bytesAvailableToRead = inputFromClient.available();
         byte[] inputStreamBytes;
-        
-        while(bytesAvailableToRead==0)
-        {
+
+        if(socket.isConnected()) {
             bytesAvailableToRead = inputFromClient.available();
+            
+            while(bytesAvailableToRead==0)
+            {
+                if(socket.isConnected())
+                    bytesAvailableToRead = inputFromClient.available();
+                else
+                    throw new IOException();
+            }
         }
-        
         inputStreamBytes = new byte[bytesAvailableToRead+1];
-            inputFromClient.read(inputStreamBytes);
-            command = new String(inputStreamBytes);
+        inputFromClient.read(inputStreamBytes);
+        command = new String(inputStreamBytes);
         
         return command;
     }

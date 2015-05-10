@@ -100,8 +100,8 @@ public class FileTableEntry {
             response = "ERROR: " + ex.getMessage();
         }
         
-        response = pageManager.freePages(filename) + "\n" + response;
         sendMessageToClient(response, output);
+        response = pageManager.freePages(filename) + "\n" + response;
         printOutputToConsole(response, threadId);
     }
     

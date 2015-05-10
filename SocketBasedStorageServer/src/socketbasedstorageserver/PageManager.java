@@ -110,7 +110,7 @@ public class PageManager {
     public Page GetPageFromSecondaryStorage(String fileName, int pageNo, Page page) throws FileNotFoundException, IOException {
 
         try (RandomAccessFile file = new RandomAccessFile(".store//" + fileName, "rw")) {
-            long pageStartOffset = pageNo * 1024;
+            long pageStartOffset = (pageNo  - 1)* 1024;
             file.seek(pageStartOffset);
 
             page.pageNo = pageNo;
