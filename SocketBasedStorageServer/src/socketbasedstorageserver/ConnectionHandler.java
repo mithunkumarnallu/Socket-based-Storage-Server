@@ -85,9 +85,19 @@ public class ConnectionHandler extends Thread {
                 while(true)
                 {
                     charFromClient=inputFromClient.read();
+                    
+                    if(charFromClient==-1)
+                    {
+                        System.out.println("Client closed.\n");
+                        return;
+                    }
+                    
+                    
                     if((char)(charFromClient) == '\n')
                         break;
                     sb.append((char)(charFromClient));
+                    
+                    
                 }
                 command = sb.toString();
                 
@@ -140,29 +150,5 @@ public class ConnectionHandler extends Thread {
             //System.err.println( ex );
             printOutputToConsole("Client closed its socket... terminating",this.getId());
         }
-    }
-    
-    private String Read() throws IOException
-    {
-        String command="";
-        int bytesAvailableToRead=-1;
-        byte[] inputStreamBytes;
-
-        if(socket.isConnected()) {
-            bytesAvailableToRead = inputFromClient.available();
-            
-            while(bytesAvailableToRead==0)
-            {
-                if(socket.isConnected())
-                    bytesAvailableToRead = inputFromClient.available();
-                else
-                    throw new IOException();
-            }
-        }
-        inputStreamBytes = new byte[bytesAvailableToRead+1];
-        inputFromClient.read(inputStreamBytes);
-        command = new String(inputStreamBytes);
-        
-        return command;
     }
 }
