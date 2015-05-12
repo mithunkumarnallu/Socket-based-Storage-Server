@@ -5,7 +5,6 @@
  */
 package socketbasedstorageserver;
 
-import Interfaces.PageMethods;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -34,7 +33,7 @@ public class FileTableEntry {
     
     private void sendMessageToClient(String message, DataOutputStream output) throws IOException {
         try {
-            output.writeUTF(message);
+            output.writeUTF(message + "\n");
         } catch (IOException ex) {
             System.err.println(ex);
             throw ex;

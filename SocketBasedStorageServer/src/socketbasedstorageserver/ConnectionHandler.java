@@ -38,7 +38,7 @@ public class ConnectionHandler extends Thread {
     
     private void sendMessageToClient(String message) throws IOException {
         try {
-            outputToClient.writeUTF(message);
+            outputToClient.writeUTF(message + "\n");
         } catch (IOException ex) {
             System.err.println(ex);
             throw ex;
@@ -138,17 +138,24 @@ public class ConnectionHandler extends Thread {
                             
                             fileName = command.substring(command.indexOf(' ') + 1, command.indexOf(' ', command.indexOf(' ') + 1));
                         }
-                        else
+                        else if(command.toUpperCase().startsWith("READ"))
                             fileName = command.substring(command.indexOf(' ') + 1, command.indexOf(' ', command.indexOf(' ') + 1));
-                        
-                       if(!server.getFileTableEntry(fileName).runCommand(command,outputToClient, this.getId()))
-                           return;
+                        else {
+                            printOutputToConsole("Invalid command",this.getId());
+                            sendMessageToClient("ERROR: Invalid command!");
+                            continue;
+                        }
+                        if(!server.getFileTableEntry(fileName).runCommand(command,outputToClient, this.getId()))
+                            return;
                     }
                 }
             }
         } catch (IOException ex) {
             //System.err.println( ex );
             printOutputToConsole("Client closed its socket... terminating",this.getId());
+        }
+        catch(Exception ex) {
+            printOutputToConsole("Invalid input received",this.getId());            
         }
     }
 }
