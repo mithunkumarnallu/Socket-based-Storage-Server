@@ -11,8 +11,10 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author ashwinbahulkar
+ * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
+
+//Page class that corresponds to one page in the virtual memory.
 public class Page {
     
     int pageNo;
@@ -29,6 +31,7 @@ public class Page {
         this.pageContent = new byte[1024];
     }
     
+    //Retuns a subset of the contents it stores based on the inputs
     String getContent(int startIndex, int length) {
         return contentsInString.substring(startIndex, startIndex + length);
     }

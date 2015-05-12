@@ -7,8 +7,9 @@ package socketbasedstorageserver;
 
 /**
  *
- * @author ashwinbahulkar
+ * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
+
 public class PageMessage {
     
     String message;

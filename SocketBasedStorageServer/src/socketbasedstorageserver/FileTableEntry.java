@@ -14,8 +14,9 @@ import java.util.List;
 
 /**
  *
- * @author ashwinbahulkar
+ * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
+
 public class FileTableEntry {
     public String filename;
     public List<Page> pageList;
@@ -24,6 +25,9 @@ public class FileTableEntry {
     public boolean isOccupied=false;
     int nextPageNo = 0;
     
+    //pageList holds all the Page objects for this file.
+    //timestamp is used to find the file whose pages have to be removed from page table
+    //pageManager is used to perfrom page related operations
     public FileTableEntry(String filename, PageManager pageManager) {
         this.filename = filename;
         this.pageList = new ArrayList<>();
@@ -31,6 +35,7 @@ public class FileTableEntry {
         this.pageManager = pageManager;
     }
     
+    //Sends messages to client
     private void sendMessageToClient(String message, DataOutputStream output) throws IOException {
         try {
             output.writeUTF(message + "\n");
@@ -40,6 +45,7 @@ public class FileTableEntry {
         }
     }
     
+    //Outputs output on the console on the server side
     private void printOutputToConsole(String response, long threadId) {
         String[] messages = response.split("\n");
         for(String msg: messages) {
@@ -48,6 +54,7 @@ public class FileTableEntry {
         }
     }
     
+    //Takes care of storing a file on the file system. Also writes proper output to console and to the client
     private void storeFile(String command, DataOutputStream output, long threadId) throws IOException {
         String commandInfo = "", fileContents = "";
         
@@ -83,6 +90,7 @@ public class FileTableEntry {
         printOutputToConsole(response, threadId);
     }
 
+    //Takes care of deleting a file on the file system. Also frees up pages allocated for it and writes proper output to console and to the client
     private void deleteFile(String command, DataOutputStream output, long threadId) throws IOException {
         String fileName = command.substring(command.indexOf(' ') + 1);
         File file = new File(".store//" + fileName);
@@ -106,6 +114,7 @@ public class FileTableEntry {
         printOutputToConsole(response, threadId);
     }
     
+    //Takes care of reading a file from the file system. Also writes proper output to console and to the client
     private void readFile(String command, DataOutputStream output, long threadId) throws IOException {
         String[] commandInfo = command.split(" ");
         
@@ -117,6 +126,7 @@ public class FileTableEntry {
         String response = "";
 
         try {
+            //Invalid inputs
             if (!file.exists()) {
                 response = "ERROR: File does not exist!";
                 sendMessageToClient(response, output);
@@ -127,6 +137,7 @@ public class FileTableEntry {
                 printOutputToConsole(response, threadId);
             }
             else {
+                //Valid input. Split the input into multiple pages and read them sequentially from file system.
                 int pageNo = (int)(byteOffset / 1024) + 1;
                 int bytesSent = 0;
                 boolean isFirstPageSent = false;
@@ -147,7 +158,6 @@ public class FileTableEntry {
                     pageNo++;
                     length -= bytesSent;
                     
-                    //To - Do: Get required page contents from page
                     sendMessageToClient("ACK " + bytesSent + "\n" + pageMessage.page.getContent((int)(byteOffset - bytesSent) % 1024, bytesSent), output);
                     printOutputToConsole(pageMessage.message + "\nTransferred " + bytesSent + " bytes from offset " + (byteOffset - bytesSent), threadId);
                     nextPageNo = (nextPageNo + 1) % 4;
@@ -159,11 +169,14 @@ public class FileTableEntry {
         }
     }
     
+    //Gets oldest page allocated for this file
     public Page getOldestPage()
     {
         return this.pageList.get(nextPageNo);
     }
     
+    //Main synchronized method to ensure only one client is running a command on this file.
+    //Interprets the command and calls correspoding methods to perform the actions
     public synchronized boolean runCommand(String command, DataOutputStream output, long threadId)
     {
         isOccupied=true;

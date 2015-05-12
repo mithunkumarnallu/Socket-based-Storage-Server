@@ -16,8 +16,9 @@ import java.util.Map.Entry;
 
 /**
  *
- * @author ashwinbahulkar
+ * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
+
 public class PageManager {
 
     int usedPageCnt;

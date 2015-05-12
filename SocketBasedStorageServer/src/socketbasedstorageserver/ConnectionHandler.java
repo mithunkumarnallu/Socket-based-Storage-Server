@@ -14,12 +14,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import sun.security.x509.X500Name;
 
 /**
  *
- * @author nmk
+ * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
+
 public class ConnectionHandler extends Thread {
 
     private Socket socket; // A connected socket

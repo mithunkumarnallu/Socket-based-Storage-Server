@@ -14,8 +14,9 @@ import java.util.HashMap;
 
 /**
  *
- * @author ashwinbahulkar
+ * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
+
 public class SocketBasedStorageServer {
     
     public HashMap<String,FileTableEntry> fileMap=new HashMap<String,FileTableEntry>();
