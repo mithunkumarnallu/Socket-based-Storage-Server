@@ -4,6 +4,7 @@
  */
 package socketbasedstorageserver;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -31,6 +32,8 @@ public class SocketBasedStorageServer {
         System.out.println("MultiThreadServer started at " + new Date());
 
         try {
+            File file = new File(".store//");
+            file.mkdir();
             // Create a server socket
             ServerSocket serverSocket = new ServerSocket(8765);
 

@@ -40,7 +40,7 @@ public class ConnectionHandler extends Thread {
     //Writes back a message to the client. 
     private void sendMessageToClient(String message) throws IOException {
         try {
-            outputToClient.writeUTF(message + "\n");
+            outputToClient.writeBytes(message + "\n");
         } catch (IOException ex) {
             System.err.println(ex);
             throw ex;
@@ -59,7 +59,7 @@ public class ConnectionHandler extends Thread {
         try {
 
             DirectoryStream<Path> dir = Files.newDirectoryStream(file.toPath());
-            response = response + file.toPath().getNameCount() + "\n";
+            response = file.list().length + "\n";
             for (Path filePath : dir) {
                 response = response + filePath.getFileName() + "\n";
             }
@@ -73,6 +73,7 @@ public class ConnectionHandler extends Thread {
     //Starting point of thread.
     public void run() {
         try {
+            
             // Create data input and output streams
             inputFromClient
                     = new DataInputStream(socket.getInputStream());
@@ -93,7 +94,7 @@ public class ConnectionHandler extends Thread {
                     
                     if(charFromClient==-1) //End of Stream => Client closed the connection
                     {
-                        System.out.println("Client closed.\n");
+                        printOutputToConsole("Client closed its socket... terminating",this.getId());
                         return;
                     }
                     
@@ -118,7 +119,7 @@ public class ConnectionHandler extends Thread {
                     
                     //Parse the command.
                     
-                    System.out.println("Rcvd: " + command);
+                    System.out.println("[thread " + this.getId() + "] Rcvd: " + command);
                     if(command.toUpperCase().startsWith("DIR"))
                         listFiles(command);
                     else 

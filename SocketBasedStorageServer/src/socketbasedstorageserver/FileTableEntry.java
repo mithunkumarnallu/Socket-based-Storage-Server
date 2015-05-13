@@ -38,7 +38,7 @@ public class FileTableEntry {
     //Sends messages to client
     private void sendMessageToClient(String message, DataOutputStream output) throws IOException {
         try {
-            output.writeUTF(message + "\n");
+            output.writeBytes(message + "\n");
         } catch (IOException ex) {
             System.err.println(ex);
             throw ex;
