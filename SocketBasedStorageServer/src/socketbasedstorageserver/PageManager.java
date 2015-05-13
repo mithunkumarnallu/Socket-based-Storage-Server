@@ -19,6 +19,7 @@ import java.util.Map.Entry;
  * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
 
+//alocates pages for a requested file,frees pages etc.
 public class PageManager {
 
     int usedPageCnt;
@@ -37,6 +38,7 @@ public class PageManager {
         usedPageCnt = 0;
     }
 
+    //gets a new page for the requested file segment
     public synchronized PageMessage getNewPage(String fileName, int pageNo) {
 
         FileTableEntry entry = server.getFileTableEntry(fileName);
@@ -70,6 +72,7 @@ public class PageManager {
         return pageMessage;
     }
 
+    //creates a new page for requested file,only if needed
     public synchronized PageMessage createNewPage(String fileName, int pageNo) throws IOException {
         String msg = "";
         FileTableEntry fileTableEntry = server.getFileTableEntry(fileName);
@@ -108,6 +111,7 @@ public class PageManager {
         return pageMsg;
     }
 
+    //gets page from secondary storage
     public Page GetPageFromSecondaryStorage(String fileName, int pageNo, Page page) throws FileNotFoundException, IOException {
 
         try (RandomAccessFile file = new RandomAccessFile(".store//" + fileName, "rw")) {
@@ -126,11 +130,13 @@ public class PageManager {
         return page;
     }
 
+    //LRU algorithm
     private Page GetOldestPage(FileTableEntry fileTableEntry) {
         Page oldestPage = fileTableEntry.getOldestPage();
         return oldestPage;
     }
 
+    //gets oldest file
     public FileTableEntry GetOldestFile(HashMap<String, FileTableEntry> fileMap) {
         FileTableEntry oldestFile;
         oldestFile = null;
@@ -143,6 +149,7 @@ public class PageManager {
         return oldestFile;
     }
 
+    //frees pages
     public synchronized String  freePages(String filename) {
         String msg = "";
         FileTableEntry entry = server.fileMap.get(filename);
@@ -166,6 +173,7 @@ public class PageManager {
         avlbpageMap.put(page.frameNo, page);
     }
 
+    //gets a page from available pages
     public PageMessage getAvlbPage() {
         String msg = "";
         if (usedPageCnt == 32) {
