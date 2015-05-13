@@ -10,6 +10,7 @@ package socketbasedstorageserver;
  * @author Ashwin Bahulkar, Siddharth Shenolikar, Mithun Nallu
  */
 
+//class contains a page and a message(acknowledgements,error messages etc)
 public class PageMessage {
     
     String message;

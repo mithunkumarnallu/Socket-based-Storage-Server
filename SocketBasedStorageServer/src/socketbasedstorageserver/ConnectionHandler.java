@@ -30,12 +30,14 @@ public class ConnectionHandler extends Thread {
     byte[] commandRaw;
     String command;
     
+    //Constructor.
     public ConnectionHandler(Socket socket, SocketBasedStorageServer server) {
         this.socket = socket;
         this.server = server;
         commandRaw = new byte[1000];
     }
     
+    //Writes back a message to the client. 
     private void sendMessageToClient(String message) throws IOException {
         try {
             outputToClient.writeUTF(message + "\n");
@@ -44,11 +46,13 @@ public class ConnectionHandler extends Thread {
             throw ex;
         }
     }
-
+    
+    //Prints the message to server console
     private void printOutputToConsole(String response, long threadId) {
         System.out.println("[thread " + threadId + "] " + response);
     }
     
+    //Gets list of files stored in .store directory and sends it back to the client. This is executed in response to the DIR command
     private void listFiles(String command) throws IOException {
         File file = new File(".store//");
         String response = "";
@@ -66,6 +70,7 @@ public class ConnectionHandler extends Thread {
         sendMessageToClient(response);
     }
     
+    //Starting point of thread.
     public void run() {
         try {
             // Create data input and output streams
@@ -86,7 +91,7 @@ public class ConnectionHandler extends Thread {
                 {
                     charFromClient=inputFromClient.read();
                     
-                    if(charFromClient==-1)
+                    if(charFromClient==-1) //End of Stream => Client closed the connection
                     {
                         System.out.println("Client closed.\n");
                         return;
@@ -111,6 +116,7 @@ public class ConnectionHandler extends Thread {
                         continue;
                     }
                     
+                    //Parse the command.
                     
                     System.out.println("Rcvd: " + command);
                     if(command.toUpperCase().startsWith("DIR"))
